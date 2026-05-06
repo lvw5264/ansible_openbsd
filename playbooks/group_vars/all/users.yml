@@ -1,0 +1,27 @@
+---
+# admin users on all home servers
+_users_default:
+  - username: lvw5264
+    groups:
+      - 'storage'
+      - 'wheel'
+    uid: 8888
+    # default password, make sure to change after
+    password: 'PUT_YOUR_PASSWORD_HASH_HERE'
+    # only update the password when created
+    update_password: 'on_create'
+    ssh_key: |
+      PUT YOUR SSH KEY HERE
+
+# additional users per group
+_users: []
+
+# additional users per host
+_users_host: []
+
+# additional groups to crate
+_groups_default: []
+_groups: []
+#_groups:
+#  - name: 'bibanon-pass'
+#    gid: 10001

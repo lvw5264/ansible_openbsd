@@ -1,0 +1,9 @@
+$ORIGIN local.xyz.
+$TTL 30
+@	IN  	SOA  	a.ns.local.xyz. hostmaster.local.xyz. (
+                  	2018040502      ; serial
+                  	1h              ; refresh
+                  	30m             ; retry
+                  	7d              ; expire
+                  	1h )            ; negative
+git	IN	A	192.168.2.52

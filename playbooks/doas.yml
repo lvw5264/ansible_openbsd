@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Create doas.conf
+    copy:
+      content: |
+               permit persist :wheel
+               permit nopass keepenv root
+      dest: /etc/doas.conf

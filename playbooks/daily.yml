@@ -1,0 +1,66 @@
+---
+- name: Ensure python3 on OpenBSD before running gather facts
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Perform a dirty OS detection for Ubuntu and Debian if python is not installed
+      raw: |-
+        if which python > /dev/null || which python3 > /dev/null; then
+          echo installed
+        else
+          sed -n "s/^NAME=\"\(.*\)\"/\\1/p" /etc/os-release
+        fi
+      changed_when: false
+      register: dirty_detect
+
+    - name: Print message when already installed
+      debug:
+        msg: Host {{ inventory_hostname }} already has python. Next will skip.
+      when: dirty_detect.stdout_lines[0] == 'installed'
+
+    - name: Install python on openbsd if needed
+      raw: |-
+        pkg_add -r python%3
+      become: true
+      when: dirty_detect.stdout_lines[0] == 'OpenBSD'
+
+#    - name: Install python on Debian or Ubuntu if needed
+#      raw: |-
+#        apt install -y python3
+#      become: true
+#      when:
+#        - dirty_detect.stdout_lines[0] == 'Ubuntu' or dirty_detect.stdout_lines[0] == 'Debian'
+
+- name: Manage OpenBSD
+  become: true
+  hosts: all
+
+  pre_tasks:
+    # Include variables and define needed variables per OS Family
+    - name: Include BSD distro family-specific variables
+      ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+
+    - name: Include BSD distro-specific variables
+      ansible.builtin.include_vars: "{{ ansible_distribution }}.yml"
+
+    # reimport host_vars back to the top of the variable hierarchy
+    - name: Include host_vars atop other include_vars
+      ansible.builtin.include_vars:
+        dir: host_vars
+        files_matching: "{{ inventory_hostname }}.yaml"
+  tasks:
+    - name: Manage OpenBSD family
+      when: ansible_os_family == "OpenBSD"
+      block:
+        - name: Ensure required packages are installed from group_vars and host_vars
+          # package resource is used here to be generic between debian and red hat
+          ansible.builtin.package:
+            # list of packages
+            name: "{{ _packages + _packages_host }}"
+            state: "{{ _ensure }}"
+
+        # create and install each service
+#        - name: Create doas.conf allowing pfbadhost and unbound-adblock
+#          ansible.builtin.copy:
+#            dest: /etc/doas.conf

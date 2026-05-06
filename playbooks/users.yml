@@ -1,0 +1,47 @@
+# creates users as defined by group_vars and host_vars
+# should work in openbsd too
+---
+- hosts: localhost
+  become: true
+  pre_tasks:
+    - name: 'Ensure ansible.posix is available'
+      command: ansible-galaxy collection install ansible.posix
+
+  tasks:
+    # storage user will take uid 1000, since it usually owns all directories
+    - name: 'Ensure storage user exists'
+      ansible.builtin.user:
+        name: 'storage'
+        uid: 1000
+    - name: 'Ensure storage group exists'
+      group:
+        name: 'storage'
+        gid: 1000
+
+    - name: 'Create groups'
+      ansible.builtin.group:
+        name: "{{ item.name }}"
+        uid: "{{ item.gid }}"
+      with_items: "{{ _groups_default + _groups + _groups_host }}"
+
+    # provide the users_admin list + users normal list
+    - name: 'Create users'
+      ansible.builtin.user:
+        name: "{{ item.username }}"
+        uid: "{{ item.uid }}"
+        shell: "{{ item.shell | default(omit) }}"
+        groups: "{{ item.groups }}"
+        # append to an existing user definition
+        append: true
+#        password: '$y$j9T$ZL5LKm2zNrUNuyKoAWNeI.$XWFyhFM1u.IFKpBMgtn8Xlu0g4sK07Y/JMB2S4a27tC'
+        update_password: "{{ item.update_password | default(omit) }}"
+      # combine two lists
+      with_items: "{{ _users_default + _users + _users_host }}"
+
+    - name: 'Add ssh key to the user'
+      ansible.posix.authorized_key:
+        user: "{{ item.username }}"
+        # key is a single file with each line being an ssh public key, not an array
+        key: '{{ item.ssh_key }}'
+      # combine two lists
+      with_items: "{{ _users_default + _users + _users_host }}"

@@ -1,0 +1,2 @@
+# set to absent to uninstall
+_ensure: present

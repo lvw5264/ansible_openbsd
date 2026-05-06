@@ -1,0 +1,20 @@
+# .gitlab-ci.yml
+
+stages:
+  - deploy
+
+daily:
+  # has dependencies preinstalled
+  image: "ghcr.io/ansible-community/community-ee-base:latest"
+  stage: deploy
+  before_script:
+    - mkdir -p ~/.ssh  # Ensure SSH directory exists
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Use the SSH private key stored in GitLab CI variables
+    - chmod 600 ~/.ssh/id_rsa  # Set correct permissions for the SSH private key
+    - ssh-keyscan -H 192.168.1.1 >> ~/.ssh/known_hosts  # Add server1's SSH key to known hosts
+  script:
+    - echo "Starting deployment with Ansible Runner"
+    - ansible-playbook -i inventory/0-hosts.ini -e "ansible_ssh_user=ansible ansible_ssh_private_key_file=~/.ssh/id_rsa playbooks/daily.yml  # Run the daily Ansible playbook using Ansible Runner and the written SSH private key
+
+  only:
+    - master  # Run the deploy job only on the master branch
