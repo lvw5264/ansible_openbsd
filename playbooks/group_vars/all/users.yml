@@ -5,7 +5,7 @@ _users_default:
     groups:
       - 'storage'
       - 'wheel'
-    uid: 8888
+    uid: 1001
     # default password, make sure to change after
     password: 'PUT_YOUR_PASSWORD_HASH_HERE'
     # only update the password when created
@@ -23,5 +23,5 @@ _users_host: []
 _groups_default: []
 _groups: []
 #_groups:
-#  - name: 'bibanon-pass'
-#    gid: 10001
+#  - name: 'yourgroup'
+#    gid: 10000
